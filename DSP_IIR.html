@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Dr Phil Birch</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <style>
+    /* Set height of the grid so .sidenav can be 100% (adjust if needed) */
+    .row.content {height: 1500px}
+
+    /* Set gray background color and 100% height */
+    .sidenav {
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+
+    /* Set black background color, white text and some padding */
+    footer {
+      background-color: #555;
+      color: white;
+      padding: 15px;
+    }
+
+    /* On small screens, set height to 'auto' for sidenav and grid */
+    @media screen and (max-width: 767px) {
+      .sidenav {
+        height: auto;
+        padding: 15px;
+      }
+      .row.content {height: auto;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="container-fluid">
+  <div class="row content">
+    <div class="col-sm-3 sidenav">
+      <h4>Dr Phil Birch</h4>
+      <ul class="nav nav-pills nav-stacked">
+        <li class="active"><a href="index.html">Home</a></li>
+        <li><a href="http://www.imagetracking.org.uk/">Image Tracking</a></li>
+        <li><a href="http://www.fourieroptics.org.uk/">Fourier Optics</a></li>
+        <li><a href="http://www.sussex.ac.uk/iisp/">Group Reseach</a></li>
+        <li><a href="http://www.sussex.ac.uk/profiles/97416">Contact Me</a></li>
+      </ul><br>
+    </div>
+
+    <div class="col-sm-9">
+
+      <hr>
+      <h2>ARM CMIS IIR filters</h2>
+      <div class="well">
+        <img class="img-responsive" src="http://www.sussex.ac.uk/images/people/profile/97416.jpg" alt="Me">
+      </div>
+      <p>There seems to be little information on the web about using Matlab and
+        ARM CMSIS IIR functions. In princple it should be easy to design a filter in
+        Matlab and run it on an an ARM chip. Well it is, its just the information
+        seems to be spread over a number documents.</p>
+        <p>The design steps are as follows. Use Matlab to design an IIR filter and
+          export the filter to the work space. (Or use any other method but convert
+          it to SOS form). The format the CMSIS is expecting is slightly different
+          to Matlab. Here is an example bandpass filter:</p>
+          <pre>
+            SOS =
+
+                1.0000   -0.9417    1.0000    1.0000    0.1845    0.8716
+                1.0000    1.7675    1.0000    1.0000    1.2434    0.9009
+                1.0000   -1.7449    1.0000    1.0000    0.5365    0.8054
+                1.0000    1.9538    1.0000    1.0000    0.9467    0.8240
+                1.0000   -0.6225    1.0000    1.0000    1.3914    0.9702
+                1.0000    1.6693    1.0000    1.0000    0.0035    0.9582
+            G =
+
+                    0.6502
+                    0.6502
+                    0.8174
+                    0.8174
+                    0.0694
+                    0.0694
+                    1.0000
+          </pre>
+<p>Each row of SOS is a stage and the parameters as <code>[b0,b1,b2,a0,a1,a2]</code></p>
+<p>Note <code>a0</code> is always one and is not needed. Looking at the <a href="http://www.keil.com/pack/doc/CMSIS/DSP/html/group__BiquadCascadeDF1.html">
+Biquad Cascade IIR Filters Using Direct Form I Structure</a> page we see the formula for each stage is
+<code>y[n] = b0 * x[n] + b1 * x[n-1] + b2 * x[n-2] + a1 * y[n-1] + a2 * y[n-2]</code>, which differs from
+Matlab's <code>y[n] = b0 * x[n] + b1 * x[n-1] + b2 * x[n-2] - a1 * y[n-1] - a2 * y[n-2]</code>. To correct
+for this we simply mutliple <code>a1</code>, and <code>a2</code> by -1. However, this also ignores the gain
+on each stage. To correct for this multiply <code>b1,b2,b3</code> by the stage gain value in <code>G</code>. </p>
+<p>The new coefficent matrix that is in the correct format form CMSIS is now</p>
+<pre>
+  Coeff =
+
+    0.6502   -0.6123    0.6502   -0.1845   -0.8716
+    0.6502    1.1491    0.6502   -1.2434   -0.9009
+    0.8174   -1.4262    0.8174   -0.5365   -0.8054
+    0.8174    1.5970    0.8174   -0.9467   -0.8240
+    0.0694   -0.0432    0.0694   -1.3914   -0.9702
+    0.0694    0.1159    0.0694   -0.0035   -0.9582
+</pre>
+<p>Note how <code>a0</code> has been removed. To automate this I have created a
+  simple Matlab file which produces the header file.</p>
+  
+
+
+    </div>
+  </div>
+</div>
+
+<footer class="container-fluid">
+  <p><a href="http://www.sussex.ac.uk/">University of Sussex</a></p>
+</footer>
+
+</body>
+</html>
